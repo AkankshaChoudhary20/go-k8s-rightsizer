@@ -5,6 +5,7 @@ package kparse
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -20,6 +21,9 @@ func ParseCPU(s string) (int64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("invalid millicore CPU quantity %q: %w", s, err)
 		}
+		if v < 0 {
+			return 0, fmt.Errorf("negative CPU quantity %q", s)
+		}
 		return v, nil
 	}
 	// Whole/fractional cores, e.g. "2" or "0.5" -> multiply by 1000.
@@ -27,7 +31,7 @@ func ParseCPU(s string) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid CPU quantity %q: %w", s, err)
 	}
-	return int64(f * 1000), nil
+	return checkedQuantity(f*1000, s)
 }
 
 var memSuffixes = map[string]int64{
@@ -56,7 +60,7 @@ func ParseMemory(s string) (int64, error) {
 			if err != nil {
 				return 0, fmt.Errorf("invalid memory quantity %q: %w", s, err)
 			}
-			return int64(v * float64(memSuffixes[suffix])), nil
+			return checkedQuantity(v*float64(memSuffixes[suffix]), s)
 		}
 	}
 
@@ -65,5 +69,17 @@ func ParseMemory(s string) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("invalid memory quantity %q: %w", s, err)
 	}
+	if v < 0 {
+		return 0, fmt.Errorf("negative memory quantity %q", s)
+	}
 	return v, nil
+}
+
+// Float-to-int conversion must not turn malformed or overflowing input into
+// negative resource recommendations. float64(MaxInt64) rounds up to 2^63.
+func checkedQuantity(value float64, original string) (int64, error) {
+	if math.IsNaN(value) || math.IsInf(value, 0) || value < 0 || value >= math.Exp2(63) {
+		return 0, fmt.Errorf("resource quantity %q is outside the nonnegative int64 range", original)
+	}
+	return int64(math.Ceil(value)), nil
 }
