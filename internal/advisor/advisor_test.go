@@ -16,8 +16,8 @@ func TestPercentile(t *testing.T) {
 	if p := Percentile(values, 50); p != 50 {
 		t.Errorf("p50 = %d, want 50", p)
 	}
-	if p := Percentile(values, 95); p != 90 {
-		t.Errorf("p95 = %d, want 90", p)
+	if p := Percentile(values, 95); p != 100 {
+		t.Errorf("p95 = %d, want 100", p)
 	}
 	if p := Percentile(values, 100); p != 100 {
 		t.Errorf("p100 = %d, want 100", p)
@@ -118,5 +118,21 @@ func TestAnalyze_RightSized(t *testing.T) {
 	rec := Analyze(spec, samples)
 	if rec.Verdict != VerdictRightSized {
 		t.Errorf("expected VerdictRightSized, got %s (%s)", rec.Verdict, rec.Reason)
+	}
+}
+
+func TestPercentileSmallSamplesDoNotHidePeaks(t *testing.T) {
+	for _, values := range [][]int64{{10, 100}, {10, 20, 100}, {10, 20, 30, 100}} {
+		if got := Percentile(values, 95); got != 100 {
+			t.Fatalf("p95(%v)=%d, want100", values, got)
+		}
+	}
+}
+
+func TestAnalyzeSmallSamplePeakChangesVerdict(t *testing.T) {
+	spec := kparse.Spec{RequestedCPUMilli: 100, RequestedMemBytes: 1000}
+	rec := Analyze(spec, []kparse.Sample{sample(10, 10), sample(300, 10)})
+	if rec.ObservedP95CPUMilli != 300 || rec.Verdict != VerdictUnderProvisioned {
+		t.Fatalf("peak hidden by percentile: %+v", rec)
 	}
 }

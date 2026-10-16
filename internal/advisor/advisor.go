@@ -3,6 +3,7 @@
 package advisor
 
 import (
+	"math"
 	"sort"
 
 	"go-k8s-rightsizer/internal/kparse"
@@ -45,7 +46,7 @@ type Recommendation struct {
 }
 
 // Percentile returns the p-th percentile (0-100) of values using
-// nearest-rank interpolation. values need not be pre-sorted; it is not
+// the nearest-rank method. values need not be pre-sorted; it is not
 // mutated.
 func Percentile(values []int64, p float64) int64 {
 	if len(values) == 0 {
@@ -60,7 +61,7 @@ func Percentile(values []int64, p float64) int64 {
 	if p >= 100 {
 		return sorted[len(sorted)-1]
 	}
-	rank := int(float64(len(sorted)-1) * p / 100.0)
+	rank := int(math.Ceil(float64(len(sorted))*p/100.0)) - 1
 	return sorted[rank]
 }
 
