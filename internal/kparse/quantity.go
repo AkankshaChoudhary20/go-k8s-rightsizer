@@ -39,6 +39,7 @@ var memSuffixes = map[string]int64{
 	"Mi": 1024 * 1024,
 	"Gi": 1024 * 1024 * 1024,
 	"Ti": 1024 * 1024 * 1024 * 1024,
+	"k":  1000,
 	"K":  1000,
 	"M":  1000 * 1000,
 	"G":  1000 * 1000 * 1000,
@@ -53,7 +54,7 @@ func ParseMemory(s string) (int64, error) {
 		return 0, fmt.Errorf("empty memory quantity")
 	}
 
-	for _, suffix := range []string{"Ki", "Mi", "Gi", "Ti", "K", "M", "G", "T"} {
+	for _, suffix := range []string{"Ki", "Mi", "Gi", "Ti", "k", "K", "M", "G", "T"} {
 		if strings.HasSuffix(s, suffix) {
 			numStr := strings.TrimSuffix(s, suffix)
 			v, err := strconv.ParseFloat(numStr, 64)
