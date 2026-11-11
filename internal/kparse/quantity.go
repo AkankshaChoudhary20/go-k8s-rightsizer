@@ -16,6 +16,15 @@ func ParseCPU(s string) (int64, error) {
 	if s == "" {
 		return 0, fmt.Errorf("empty CPU quantity")
 	}
+	for suffix, scale := range map[string]float64{"n": 1e-6, "u": 1e-3} {
+		if strings.HasSuffix(s, suffix) {
+			value, err := strconv.ParseFloat(strings.TrimSuffix(s, suffix), 64)
+			if err != nil {
+				return 0, fmt.Errorf("invalid CPU quantity %q: %w", s, err)
+			}
+			return checkedQuantity(value*scale, s)
+		}
+	}
 	if strings.HasSuffix(s, "m") {
 		v, err := strconv.ParseInt(strings.TrimSuffix(s, "m"), 10, 64)
 		if err != nil {
