@@ -17,14 +17,22 @@ func ParseCPU(s string) (int64, error) {
 		return 0, fmt.Errorf("empty CPU quantity")
 	}
 	if strings.HasSuffix(s, "m") {
-		v, err := strconv.ParseInt(strings.TrimSuffix(s, "m"), 10, 64)
+		// Keep integer quantities exact, including MaxInt64, before trying
+		// the fractional form through float64.
+		if v, err := strconv.ParseInt(strings.TrimSuffix(s, "m"), 10, 64); err == nil {
+			if v < 0 {
+				return 0, fmt.Errorf("negative CPU quantity %q", s)
+			}
+			return v, nil
+		}
+		v, err := strconv.ParseFloat(strings.TrimSuffix(s, "m"), 64)
 		if err != nil {
 			return 0, fmt.Errorf("invalid millicore CPU quantity %q: %w", s, err)
 		}
 		if v < 0 {
 			return 0, fmt.Errorf("negative CPU quantity %q", s)
 		}
-		return v, nil
+		return checkedQuantity(v, s)
 	}
 	// Whole/fractional cores, e.g. "2" or "0.5" -> multiply by 1000.
 	f, err := strconv.ParseFloat(s, 64)
