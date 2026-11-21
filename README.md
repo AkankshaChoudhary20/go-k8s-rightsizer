@@ -56,6 +56,10 @@ kubectl get pods --all-namespaces -o json > specs.json
 go run . analyze -history history.ndjson -specs specs.json
 ```
 
+Use `go run . collect -h` and `go run . analyze -h` to inspect the flags for
+each subcommand. To try the analyzer without collecting live usage, use the
+sample files under `testdata/` in the command above.
+
 ## Tests
 
 ```bash
