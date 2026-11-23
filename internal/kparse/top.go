@@ -1,7 +1,6 @@
 package kparse
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 	"time"
@@ -22,11 +21,9 @@ type Sample struct {
 // columns are: NAMESPACE POD NAME CPU(cores) MEMORY(bytes).
 func ParseTopContainers(output string, at time.Time) ([]Sample, error) {
 	var samples []Sample
-	scanner := bufio.NewScanner(strings.NewReader(output))
-	lineNum := 0
-	for scanner.Scan() {
-		lineNum++
-		line := strings.TrimSpace(scanner.Text())
+	for index, rawLine := range strings.Split(output, "\n") {
+		lineNum := index + 1
+		line := strings.TrimSpace(rawLine)
 		if line == "" {
 			continue
 		}
@@ -52,9 +49,6 @@ func ParseTopContainers(output string, at time.Time) ([]Sample, error) {
 			CPUMilli:  cpu,
 			MemBytes:  mem,
 		})
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
 	}
 	return samples, nil
 }
